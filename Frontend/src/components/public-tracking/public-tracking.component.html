@@ -2,27 +2,59 @@
   <h2>Rastreo público de paquete</h2>
   <form (ngSubmit)="onSubmit()" #f="ngForm" class="form">
     <label for="code">Código de rastreo público</label>
-    <input id="code" name="code" [(ngModel)]="code" placeholder="Ej: TRK-ABCD-1234" required />
+    <input
+      id="code"
+      name="code"
+      [(ngModel)]="code"
+      placeholder="Ej: TRK-ABCD-1234"
+      required
+    />
     <button type="submit" [disabled]="loading || !code.trim()">Buscar</button>
   </form>
 
   <div *ngIf="loading" class="loading">Buscando...</div>
 
-  <div *ngIf="error==='not_found'" class="error">No encontramos un paquete con ese código.</div>
-  <div *ngIf="error==='rate_limited'" class="error">Demasiadas solicitudes. Intenta más tarde.</div>
-  <div *ngIf="error==='unknown'" class="error">Ocurrió un error. Intenta nuevamente.</div>
+  <div *ngIf="error === 'not_found'" class="error">
+    No encontramos un paquete con ese código.
+  </div>
+  <div *ngIf="error === 'rate_limited'" class="error">
+    Demasiadas solicitudes. Intenta más tarde.
+  </div>
+  <div *ngIf="error === 'unknown'" class="error">
+    Ocurrió un error. Intenta nuevamente.
+  </div>
 
   <div *ngIf="data as d" class="result">
     <div class="summary">
-      <div class="summary-item"><span class="label">Código</span><span class="value">{{ d.code }}</span></div>
-      <div class="summary-item"><span class="label">Estado</span><span class="value">{{ d.status }}</span></div>
-      <div class="summary-item"><span class="label">Creado</span><span class="value">{{ formatDate(d.created_at) }}</span></div>
-      <div class="summary-item"><span class="label">Actualizado</span><span class="value">{{ formatDate(d.updated_at) }}</span></div>
+      <div class="summary-item">
+        <span class="label">Código</span><span class="value">{{ d.code }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Estado</span
+        ><span
+          class="badge"
+          [class.pending]="data.status === PackageStatus.PENDING"
+          [class.intransit]="data.status === PackageStatus.IN_TRANSIT"
+          [class.delivered]="data.status === PackageStatus.DELIVERED"
+          [class.returned]="data.status === PackageStatus.RETURNED"
+          >{{ getStatusText(data.status) }}</span
+        >
+      </div>
+      <div class="summary-item">
+        <span class="label">Creado</span
+        ><span class="value">{{ formatDate(d.created_at) }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Actualizado</span
+        ><span class="value">{{ formatDate(d.updated_at) }}</span>
+      </div>
       <!-- <div class="summary-item"><span class="label">Entrega estimada</span><span class="value">{{ formatDate(d.eta || d.estimated_delivery_date) }}</span></div> -->
     </div>
 
     <div class="share-actions">
-      <button type="button" class="secondary" (click)="copyLink()">Copiar enlace</button>
+      <button type="button" class="secondary" (click)="copyLink()">
+        Copiar enlace
+      </button>
       <button type="button" (click)="share()">Compartir</button>
       <small *ngIf="shareCopied">¡Enlace copiado!</small>
     </div>
