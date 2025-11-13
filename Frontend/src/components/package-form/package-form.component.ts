@@ -17,6 +17,10 @@ export class PackageFormComponent implements OnInit {
   isSubmitting = false;
   packageId: string | null = null;
   tomorrow: string;
+  estimatedDeliveryError: string | null = null;
+  backendErrors: Record<string, string | null> = {};
+  serverErrorMessage: string | null = null;
+  serverErrorDetails: { path: string; label: string; msg: string }[] = [];
 
   formData = {
     sender_name: '',
@@ -110,9 +114,13 @@ export class PackageFormComponent implements OnInit {
     });
   }
 
-  onSubmit() {
+  onSubmit(form: NgForm) {
     if (this.isSubmitting) return;
-
+    this.validateEstimatedDelivery();
+    if (!this.isFormValid(form)) {
+      Object.values(form.controls).forEach(c => (c as any).markAsTouched?.());
+      return;
+    }
     this.isSubmitting = true;
 
     const packageData = {
@@ -154,6 +162,7 @@ export class PackageFormComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al actualizar el paquete:', error);
+          this.applyBackendErrors(error, form);
           this.isSubmitting = false;
         },
         complete: () => {
@@ -165,6 +174,11 @@ export class PackageFormComponent implements OnInit {
       this.packageService.createPackage(createData as CreatePackageRequest).subscribe({
         next: () => {
           this.router.navigate(['/paquetes']);
+        },
+        error: (error) => {
+          console.error('Error al crear el paquete:', error);
+          this.applyBackendErrors(error, form);
+          this.isSubmitting = false;
         },
         complete: () => {
           this.isSubmitting = false;
@@ -178,6 +192,117 @@ export class PackageFormComponent implements OnInit {
   }
 
   isFormValid(form: NgForm): boolean {
-    return form.form.valid && this.formData.weight > 0;
+    const backendHasErrors = Object.values(this.backendErrors).some(v => !!v);
+    return form.form.valid && this.formData.weight > 0 && !this.estimatedDeliveryError && !backendHasErrors;
+  }
+
+  onEstimatedDeliveryChange(value: string) {
+    this.formData.estimated_delivery = value;
+    this.validateEstimatedDelivery();
+  }
+
+  validateEstimatedDelivery() {
+    const value = this.formData.estimated_delivery;
+    if (!value) {
+      this.estimatedDeliveryError = 'Este campo es obligatorio';
+      return;
+    }
+    const date = new Date(value);
+    if (isNaN(date.getTime())) {
+      this.estimatedDeliveryError = 'Formato de fecha incorrecto';
+      return;
+    }
+    const tomorrowDate = new Date(this.tomorrow);
+    if (date < tomorrowDate) {
+      this.estimatedDeliveryError = 'La fecha debe ser posterior a mañana';
+      return;
+    }
+    this.estimatedDeliveryError = null;
+  }
+
+  clearBackendError(field: string) {
+    if (this.backendErrors[field]) {
+      this.backendErrors[field] = null;
+    }
+    if (this.serverErrorMessage) {
+      this.serverErrorMessage = null;
+    }
+    if (this.serverErrorDetails.length) {
+      this.serverErrorDetails = this.serverErrorDetails.filter(d => d.path !== field);
+      if (this.serverErrorDetails.length === 0) {
+        this.serverErrorMessage = null;
+      }
+    }
+  }
+
+  private applyBackendErrors(error: any, form: NgForm) {
+    try {
+      const details = error?.error?.details || error?.details;
+      this.serverErrorDetails = [];
+      if (Array.isArray(details)) {
+        details.forEach((d: any) => {
+          const path: string = d?.path;
+          const msg: string = d?.msg || 'Dato inválido';
+          if (path) {
+            this.backendErrors[path] = msg;
+            const ctrlName = this.mapBackendPathToControlName(path);
+            if (ctrlName && form.controls[ctrlName]) {
+              (form.controls[ctrlName] as any).markAsTouched?.();
+            }
+            this.serverErrorDetails.push({ path, label: this.mapBackendPathToLabel(path), msg });
+          }
+        });
+        this.serverErrorMessage = error?.error?.error || 'Datos de entrada inválidos';
+        if (this.serverErrorMessage) {
+          alert(this.serverErrorMessage);
+        }
+      }
+      else {
+        this.serverErrorMessage = error?.error?.error || error?.message || 'Error del servidor. Inténtalo nuevamente.';
+        alert(this.serverErrorMessage);
+      }
+    } catch (e) {
+      console.error('No se pudieron aplicar errores del backend', e);
+      this.serverErrorMessage = 'Ocurrió un error inesperado. Intenta nuevamente.';
+      alert(this.serverErrorMessage);
+    }
+  }
+
+  private mapBackendPathToLabel(path: string): string {
+    const labels: Record<string, string> = {
+      sender_email: 'Correo del remitente',
+      recipient_email: 'Correo del destinatario',
+      sender_name: 'Nombre del remitente',
+      recipient_name: 'Nombre del destinatario',
+      sender_phone: 'Teléfono del remitente',
+      recipient_phone: 'Teléfono del destinatario',
+      sender_address: 'Dirección del remitente',
+      recipient_address: 'Dirección del destinatario',
+      weight: 'Peso',
+      quantity: 'Cantidad de productos',
+      dimensions: 'Dimensiones',
+      description: 'Descripción',
+      estimated_delivery: 'Fecha de entrega estimada',
+    };
+    return labels[path] || path;
+  }
+
+  private mapBackendPathToControlName(path: string): string | null {
+    const map: Record<string, string> = {
+      sender_email: 'senderEmail',
+      recipient_email: 'recipientEmail',
+      sender_name: 'senderName',
+      recipient_name: 'recipientName',
+      sender_phone: 'senderPhone',
+      recipient_phone: 'recipientPhone',
+      sender_address: 'senderAddress',
+      recipient_address: 'recipientAddress',
+      weight: 'weight',
+      quantity: 'quantity',
+      dimensions: 'dimensions',
+      description: 'description',
+      estimated_delivery: 'estimatedDelivery',
+    };
+    return map[path] || null;
   }
 }

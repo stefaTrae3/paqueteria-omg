@@ -163,7 +163,8 @@ export class PaquetesController {
           is_active: 1,
           [Op.or]: [
             { tracking_number: numero },
-            { tracking_code: numero }
+            { tracking_code: numero },
+            { public_tracking_code: numero }
           ]
         },
         include: [{ model: this.ClientModel, as: 'client', required: false }]

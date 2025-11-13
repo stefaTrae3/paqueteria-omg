@@ -95,13 +95,21 @@ export class LoginComponent implements OnInit, OnDestroy {
       next: () => this.router.navigate(['/dashboard']),
       error: (err) => {
         // Manejo de 429 Too Many Requests con Retry-After
-        if (err?.status === 429) {
+        const is429 = (err?.status === 429) || /HTTP\s*429/i.test(err?.message || '');
+        if (is429) {
           const retryAfterHeader = err?.headers?.get?.('Retry-After') ?? err?.error?.retryAfter ?? null;
           const seconds = this.parseRetryAfter(retryAfterHeader);
           this.startCooldown(seconds || 30); // fallback 30s si no viene header
-          this.error = 'Demasiados intentos. Intenta de nuevo en ' + this.retryInSeconds + 's';
+          // Mostrar mensaje del backend si viene, si no usar uno genérico
+          const raw429 = (err?.error?.error || err?.error?.message || (typeof err?.error === 'string' ? err.error : '') || err?.message || '');
+          const friendly429 = String(raw429).replace(/^HTTP\s*429\s*:\s*/i, '').trim();
+          this.error = friendly429 || ('Demasiados intentos. Intenta de nuevo en ' + this.retryInSeconds + 's');
         } else {
-          this.error = err?.error?.message || 'Error al iniciar sesión';
+          // Extraer mensaje desde distintas formas: {error}, {message}, string o Error.message
+          const raw = (err?.error?.error || err?.error?.message || (typeof err?.error === 'string' ? err.error : '') || err?.message || '');
+          // Quitar prefijo tipo "HTTP 401:" si viene de fetch helpers
+          const friendly = String(raw).replace(/^HTTP\s*\d+\s*:\s*/i, '').trim();
+          this.error = friendly || 'Error al iniciar sesión';
         }
         this.loading = false;
       }

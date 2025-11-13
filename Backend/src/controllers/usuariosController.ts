@@ -327,6 +327,46 @@ export class UsuariosController {
     }
   }
 
+  // Desactivar usuario
+  async deactivate(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const currentUser = req.user;
+
+      // No permitir que un usuario se desactive a sí mismo
+      if (currentUser?.id === parseInt(id)) {
+        res.status(400).json({
+          error: 'No puedes desactivar tu propia cuenta'
+        });
+        return;
+      }
+
+      const existingUser = await this.UsuarioModel.findOne({ where: { id, is_active: 1 }, attributes: ['id'] });
+      if (!existingUser) {
+        res.status(404).json({
+          error: 'Usuario no encontrado o ya inactivo'
+        });
+        return;
+      }
+
+      await this.UsuarioModel.update({ is_active: 0 }, { where: { id } });
+
+      // Revocar todos los refresh tokens activos del usuario desactivado
+      try {
+        await this.RefreshTokenModel.update({ revoked: 1 }, { where: { user_id: id, revoked: 0 } });
+      } catch (e) {
+        console.warn('No se pudo revocar tokens de refresco al desactivar usuario', e);
+      }
+
+      res.json({ message: 'Usuario desactivado exitosamente' });
+    } catch (error) {
+      console.error('Error al desactivar usuario:', error);
+      res.status(500).json({
+        error: 'Error interno del servidor'
+      });
+    }
+  }
+
   async getProfile(req: AuthRequest, res: Response) {
     try {
       const currentUser = req.user;

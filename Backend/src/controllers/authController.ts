@@ -7,7 +7,7 @@ import { generateAccessToken, createRefreshToken, verifyRefreshTokenPayload, cre
 
 // Ventana y políticas anti-bruteforce (por email)
 const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutos
-const LOGIN_MAX_ATTEMPTS = 5; // intentos permitidos por ventana
+const LOGIN_MAX_ATTEMPTS = 10; // intentos permitidos por ventana
 const LOGIN_BLOCK_MS = 30 * 60 * 1000; // bloqueo 30 minutos
 const loginAttempts = new Map<string, { count: number; first: number; blockedUntil?: number }>();
 

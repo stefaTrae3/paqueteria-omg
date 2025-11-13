@@ -217,7 +217,7 @@ router.get('/:id', async (req: any, res: any) => {
  * @swagger
  * /api/paquetes/tracking/{numero}:
  *   get:
- *     summary: Buscar paquete por número de seguimiento
+ *     summary: Buscar paquete por número/código de seguimiento
  *     tags: [Paquetes]
  *     security:
  *       - bearerAuth: []
@@ -227,7 +227,7 @@ router.get('/:id', async (req: any, res: any) => {
  *         required: true
  *         schema:
  *           type: string
- *         description: Número de seguimiento del paquete
+ *         description: Número de seguimiento, código privado o código público del paquete
  *     responses:
  *       200:
  *         description: Paquete encontrado correctamente

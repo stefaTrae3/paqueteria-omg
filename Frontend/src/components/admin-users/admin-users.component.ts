@@ -77,7 +77,7 @@ export class AdminUsersComponent implements OnInit {
     this.load();
   }
 
-  activate(u: UsuarioRow): void {
+  activate = (u: UsuarioRow): void => {
     if (!confirm(`¿Activar la cuenta de ${u.nombre}?`)) return;
     this.usuarios.activate(u.id).subscribe({
       next: () => this.load(),
@@ -87,12 +87,22 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
-  delete(u: UsuarioRow): void {
-    if (!confirm(`¿Eliminar (desactivar) la cuenta de ${u.nombre}?`)) return;
+  deactivate = (u: UsuarioRow): void => {
+    if (!confirm(`¿Desactivar la cuenta de ${u.nombre}?`)) return;
+    this.usuarios.deactivate(u.id).subscribe({
+      next: () => this.load(),
+      error: (err) => {
+        this.error = err?.error?.message || 'No se pudo desactivar';
+      }
+    });
+  }
+
+  delete = (u: UsuarioRow): void => {
+    if (!confirm(`¿Desactivar la cuenta de ${u.nombre}?`)) return;
     this.usuarios.delete(u.id).subscribe({
       next: () => this.load(),
       error: (err) => {
-        this.error = err?.error?.message || 'No se pudo eliminar';
+        this.error = err?.error?.message || 'No se pudo desactivar';
       }
     });
   }

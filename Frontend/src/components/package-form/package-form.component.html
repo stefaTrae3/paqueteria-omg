@@ -12,7 +12,13 @@
     </div>
   </div>
 
-  <form (ngSubmit)="onSubmit()" #packageForm="ngForm" class="package-form-content">
+  <form (ngSubmit)="onSubmit(packageForm)" #packageForm="ngForm" class="package-form-content">
+    <div class="server-error" *ngIf="serverErrorMessage">
+      {{ serverErrorMessage }}
+      <ul class="server-error-list" *ngIf="serverErrorDetails.length">
+        <li *ngFor="let d of serverErrorDetails">{{ d.label }}: {{ d.msg }}</li>
+      </ul>
+    </div>
     <div class="form-sections">
       <!-- Información del Remitente -->
       <div class="form-section card">
@@ -40,7 +46,7 @@
                 [class.error]="senderName.invalid && senderName.touched"
                 placeholder="Ingresa el nombre del remitente"
               >
-              <div class="error-message" *ngIf="senderName.invalid && senderName.touched">
+              <div class="error-message" *ngIf="senderName.invalid && (senderName.dirty || senderName.touched || packageForm.submitted)">
                 <span *ngIf="senderName.errors?.['required']">El nombre del remitente es obligatorio</span>
                 <span *ngIf="senderName.errors?.['minlength']">El nombre debe tener al menos 2 caracteres</span>
                 <span *ngIf="senderName.errors?.['maxlength']">El nombre no puede exceder 100 caracteres</span>
@@ -55,13 +61,16 @@
                 #senderEmail="ngModel"
                 required
                 email
+                pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
                 class="form-input"
                 [class.error]="senderEmail.invalid && senderEmail.touched"
                 placeholder="correo@ejemplo.com"
+                (ngModelChange)="clearBackendError('sender_email')"
               >
-              <div class="error-message" *ngIf="senderEmail.invalid && senderEmail.touched">
+              <div class="error-message" *ngIf="senderEmail.invalid && (senderEmail.dirty || senderEmail.touched || packageForm.submitted)">
                 <span *ngIf="senderEmail.errors?.['required']">El correo electrónico es obligatorio</span>
-                <span *ngIf="senderEmail.errors?.['email']">Ingresa un correo electrónico válido</span>
+                <span *ngIf="(senderEmail.errors?.['email'] || senderEmail.errors?.['pattern']) && !backendErrors['sender_email']">Ingresa un correo electrónico válido</span>
+                <span *ngIf="backendErrors['sender_email']">{{ backendErrors['sender_email'] }}</span>
               </div>
             </div>
           </div>
@@ -79,7 +88,7 @@
                 [class.error]="senderPhone.invalid && senderPhone.touched"
                 placeholder="+56 9 1234 5678"
               >
-              <div class="error-message" *ngIf="senderPhone.invalid && senderPhone.touched">
+              <div class="error-message" *ngIf="senderPhone.invalid && (senderPhone.dirty || senderPhone.touched || packageForm.submitted)">
                 <span *ngIf="senderPhone.errors?.['required']">El teléfono es obligatorio</span>
                 <span *ngIf="senderPhone.errors?.['pattern']">Ingresa un número de teléfono válido</span>
               </div>
@@ -99,7 +108,7 @@
               rows="3"
               placeholder="Dirección completa incluyendo comuna y ciudad"
             ></textarea>
-            <div class="error-message" *ngIf="senderAddress.invalid && senderAddress.touched">
+            <div class="error-message" *ngIf="senderAddress.invalid && (senderAddress.dirty || senderAddress.touched || packageForm.submitted)">
               <span *ngIf="senderAddress.errors?.['required']">La dirección es obligatoria</span>
               <span *ngIf="senderAddress.errors?.['minlength']">La dirección debe tener al menos 10 caracteres</span>
               <span *ngIf="senderAddress.errors?.['maxlength']">La dirección no puede exceder 500 caracteres</span>
@@ -134,7 +143,7 @@
                 [class.error]="recipientName.invalid && recipientName.touched"
                 placeholder="Ingresa el nombre del destinatario"
               >
-              <div class="error-message" *ngIf="recipientName.invalid && recipientName.touched">
+              <div class="error-message" *ngIf="recipientName.invalid && (recipientName.dirty || recipientName.touched || packageForm.submitted)">
                 <span *ngIf="recipientName.errors?.['required']">El nombre del destinatario es obligatorio</span>
                 <span *ngIf="recipientName.errors?.['minlength']">El nombre debe tener al menos 2 caracteres</span>
                 <span *ngIf="recipientName.errors?.['maxlength']">El nombre no puede exceder 100 caracteres</span>
@@ -149,13 +158,16 @@
                 #recipientEmail="ngModel"
                 required
                 email
+                pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
                 class="form-input"
                 [class.error]="recipientEmail.invalid && recipientEmail.touched"
                 placeholder="correo@ejemplo.com"
+                (ngModelChange)="clearBackendError('recipient_email')"
               >
-              <div class="error-message" *ngIf="recipientEmail.invalid && recipientEmail.touched">
+              <div class="error-message" *ngIf="recipientEmail.invalid && (recipientEmail.dirty || recipientEmail.touched || packageForm.submitted)">
                 <span *ngIf="recipientEmail.errors?.['required']">El correo electrónico es obligatorio</span>
-                <span *ngIf="recipientEmail.errors?.['email']">Ingresa un correo electrónico válido</span>
+                <span *ngIf="(recipientEmail.errors?.['email'] || recipientEmail.errors?.['pattern']) && !backendErrors['recipient_email']">Ingresa un correo electrónico válido</span>
+                <span *ngIf="backendErrors['recipient_email']">{{ backendErrors['recipient_email'] }}</span>
               </div>
             </div>
           </div>
@@ -173,7 +185,7 @@
                 [class.error]="recipientPhone.invalid && recipientPhone.touched"
                 placeholder="+56 9 1234 5678"
               >
-              <div class="error-message" *ngIf="recipientPhone.invalid && recipientPhone.touched">
+              <div class="error-message" *ngIf="recipientPhone.invalid && (recipientPhone.dirty || recipientPhone.touched || packageForm.submitted)">
                 <span *ngIf="recipientPhone.errors?.['required']">El teléfono es obligatorio</span>
                 <span *ngIf="recipientPhone.errors?.['pattern']">Ingresa un número de teléfono válido</span>
               </div>
@@ -193,7 +205,7 @@
               rows="3"
               placeholder="Dirección completa incluyendo comuna y ciudad"
             ></textarea>
-            <div class="error-message" *ngIf="recipientAddress.invalid && recipientAddress.touched">
+            <div class="error-message" *ngIf="recipientAddress.invalid && (recipientAddress.dirty || recipientAddress.touched || packageForm.submitted)">
               <span *ngIf="recipientAddress.errors?.['required']">La dirección es obligatoria</span>
               <span *ngIf="recipientAddress.errors?.['minlength']">La dirección debe tener al menos 10 caracteres</span>
               <span *ngIf="recipientAddress.errors?.['maxlength']">La dirección no puede exceder 500 caracteres</span>
@@ -229,9 +241,9 @@
                 [class.error]="weight.invalid && weight.touched"
                 placeholder="2.5"
               >
-              <div class="error-message" *ngIf="weight.invalid && weight.touched">
-                <span *ngIf="weight.errors?.['required']">El peso es obligatorio</span>
-                <span *ngIf="weight.errors?.['min']">El peso mínimo es 0.1 kg</span>
+              <div class="error-message" *ngIf="weight.invalid && (weight.dirty || weight.touched || packageForm.submitted)">
+                <span *ngIf="weight.errors?.['required']">Este campo es obligatorio</span>
+                <span *ngIf="weight.errors?.['min']">El valor debe ser mayor a 0</span>
                 <span *ngIf="weight.errors?.['max']">El peso máximo es 1000 kg</span>
               </div>
             </div>
@@ -249,8 +261,8 @@
                 [class.error]="quantity.invalid && quantity.touched"
                 placeholder="1"
               >
-              <div class="error-message" *ngIf="quantity.invalid && quantity.touched">
-                <span *ngIf="quantity.errors?.['required']">La cantidad es obligatoria</span>
+              <div class="error-message" *ngIf="quantity.invalid && (quantity.dirty || quantity.touched || packageForm.submitted)">
+                <span *ngIf="quantity.errors?.['required']">Este campo es obligatorio</span>
                 <span *ngIf="quantity.errors?.['min']">La cantidad mínima es 1</span>
                 <span *ngIf="quantity.errors?.['max']">La cantidad máxima es 10,000</span>
               </div>
@@ -270,8 +282,8 @@
                 [class.error]="dimensions.invalid && dimensions.touched"
                 placeholder="30x20x15 cm"
               >
-              <div class="error-message" *ngIf="dimensions.invalid && dimensions.touched">
-                <span *ngIf="dimensions.errors?.['required']">Las dimensiones son obligatorias</span>
+              <div class="error-message" *ngIf="dimensions.invalid && (dimensions.dirty || dimensions.touched || packageForm.submitted)">
+                <span *ngIf="dimensions.errors?.['required']">Este campo es obligatorio</span>
                 <span *ngIf="dimensions.errors?.['pattern']">Formato: 30x20x15 cm (o mm, m)</span>
               </div>
             </div>
@@ -290,8 +302,8 @@
               rows="3"
               placeholder="Describe brevemente el contenido del paquete"
             ></textarea>
-            <div class="error-message" *ngIf="description.invalid && description.touched">
-              <span *ngIf="description.errors?.['required']">La descripción es obligatoria</span>
+            <div class="error-message" *ngIf="description.invalid && (description.dirty || description.touched || packageForm.submitted)">
+              <span *ngIf="description.errors?.['required']">Este campo es obligatorio</span>
               <span *ngIf="description.errors?.['minlength']">La descripción debe tener al menos 5 caracteres</span>
               <span *ngIf="description.errors?.['maxlength']">La descripción no puede exceder 500 caracteres</span>
             </div>
@@ -308,9 +320,11 @@
                 class="form-input"
                 [class.error]="estimatedDelivery.invalid && estimatedDelivery.touched"
                 [min]="tomorrow"
+                (ngModelChange)="onEstimatedDeliveryChange($event)"
               >
-              <div class="error-message" *ngIf="estimatedDelivery.invalid && estimatedDelivery.touched">
-                <span *ngIf="estimatedDelivery.errors?.['required']">La fecha de entrega es obligatoria</span>
+              <div class="error-message" *ngIf="estimatedDeliveryError || (estimatedDelivery.invalid && (estimatedDelivery.dirty || estimatedDelivery.touched || packageForm.submitted))">
+                <span *ngIf="estimatedDelivery.errors?.['required']">Este campo es obligatorio</span>
+                <span *ngIf="estimatedDeliveryError">{{ estimatedDeliveryError }}</span>
               </div>
             </div>
             <div class="form-group" *ngIf="isEditMode">
@@ -363,7 +377,7 @@
         <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20" *ngIf="!isSubmitting">
           <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
         </svg>
-        {{ isSubmitting ? 'Guardando...' : (isEditMode ? 'Actualizar Paquete' : 'Crear Paquete') }}
+        {{ isSubmitting ? 'Guardando...' : (isEditMode ? 'editar paquete' : 'crear paquete') }}
       </button>
     </div>
   </form>

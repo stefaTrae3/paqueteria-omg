@@ -443,4 +443,11 @@ router.patch('/:id/activate', authorizeRoles('admin'), async (req: any, res: any
   await usuariosController.activate(req, res);
 });
 
+// Desactivar usuario (cambiar estado a inactivo)
+router.patch('/:id/deactivate', authorizeRoles('admin'), async (req: any, res: any) => {
+  const mdl = req.app.locals.models || defaultModels;
+  const usuariosController = new UsuariosController(mdl);
+  await usuariosController.deactivate(req, res);
+});
+
 export default router;

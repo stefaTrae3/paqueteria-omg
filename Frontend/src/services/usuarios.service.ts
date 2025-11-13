@@ -51,6 +51,12 @@ export class UsuariosService {
       .pipe(map(res => res.data));
   }
 
+  deactivate(id: number): Observable<{ success?: boolean; message?: string }> {
+    return this.http
+      .patch<{ success?: boolean; data?: any; message?: string }>(`${this.baseUrl}/usuarios/${id}/deactivate`, {}, { withCredentials: true })
+      .pipe(map(res => ({ success: (res as any).success ?? true, message: (res as any).message })));
+  }
+
   delete(id: number): Observable<{ success?: boolean; message?: string }> {
     return this.http
       .delete<{ success?: boolean; data?: any; message?: string }>(`${this.baseUrl}/usuarios/${id}`, { withCredentials: true })

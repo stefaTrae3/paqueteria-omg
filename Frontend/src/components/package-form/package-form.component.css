@@ -144,6 +144,25 @@ textarea.form-input {
   font-size: 0.75rem;
 }
 
+.server-error {
+  margin: var(--spacing-4) var(--spacing-6) 0 var(--spacing-6);
+  padding: var(--spacing-3) var(--spacing-4);
+  background-color: var(--error-50);
+  border: 1px solid var(--error-200);
+  color: var(--error-700);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+}
+
+.server-error-list {
+  margin: var(--spacing-2) 0 0 0;
+  padding-left: var(--spacing-5);
+}
+
+.server-error-list li {
+  font-size: 0.9rem;
+}
+
 .multiple-packages-info {
   background-color: var(--primary-50);
   border: 1px solid var(--primary-200);
